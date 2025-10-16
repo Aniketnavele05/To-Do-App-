@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ===== Header ===== */
+        header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        header h6 {
+            margin: 0;
+            font-weight: normal;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background-color: #ff4b5c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background-color: #e04352;
+        }
+
+        /* ===== Add Task Form ===== */
+        .add-task {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .add-task form {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .add-task input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+
+        .add-task button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .add-task button:hover {
+            background-color: #3b7ccc;
+        }
+
+        /* ===== Tasks ===== */
+        .group_task {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .group_task h1 {
+            font-size: 1.3rem;
+            color: #333;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        .tasks li {
+            display: flex;
+            justify-content: space-between; /* Checkbox/title left, delete right */
+            align-items: flex-start;        /* Align top when text wraps */
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;                /* Allow content to wrap */
+            gap: 10px;                      /* Space if it wraps */
+        }
+
+        .task-left {
+            display: flex;
+            align-items: flex-start;        /* Align checkbox and text top */
+            gap: 10px;                      /* Space between checkbox and text */
+            flex: 1;                        /* Take available space */
+            min-width: 0;                   /* Needed for text wrapping in flex */
+        }
+
+        .task-left span {
+            word-break: break-word;         /* Wrap long task titles */
+        }
+
+        .delete_task {
+            background-color: #ff4b5c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            flex-shrink: 0;                 /* Prevent button from shrinking */
+        }
+
+
+        .tasks ol {
+            list-style: none;
+            padding: 0;
+        }
+
+        .done {
+            color: green;
+            font-weight: 700;
+        }
+
+        .pending {
+            color: #333;
+        }
+
+        .delete_task:hover {
+            background-color: #e04352;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h3>{{ full_name }}</h3>
+        <h6>TO-DO'S</h6>
+    </div>
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+</header>
+
+<!-- Add Task Form -->
+<div class="add-task">
+    <form method="POST" action="{% url 'add_tasks' %}">
+        {% csrf_token %}
+        <input type="text" name="title" placeholder="Enter New Task" required>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<!-- Task Groups -->
+<div class="group_task">
+    {% for date, tasks in group_task.items %}
+        <h1>{{ date }}</h1>
+        <div class="tasks">
+            <ol>
+                {% for task in tasks %}
+                    <li>
+                        <div class="task-left">
+                            <form method="POST" action="{% url 'complete_task' task.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="complete" value="off">
+                                <input type="checkbox" name="complete" value="on"
+                                    onchange="this.form.submit()"
+                                    {% if task.complete %}checked{% endif %}>
+                            </form>
+                            <span class="{% if task.complete %}done{% else %}pending{% endif %}">
+                                {{ task.title }}
+                            </span>
+                        </div>
+
+                        <form method="POST" action="{% url 'delete_task' task.id %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete_task">Delete</button>
+                        </form>
+                    </li>
+                {% empty %}
+                    <li>No tasks yet!</li>
+                {% endfor %}
+            </ol>
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>
